@@ -20,29 +20,33 @@ import (
 type ChatGPTUnoBot struct {
 	cfg            *ChatGPTUnoConfig
 	jar            tls_client.CookieJar
-	baseUrl        string
 	conversationId string
 	parentId       string
 	convMapping    *Mapping
 }
 
 func NewChatGPTUnoBot(cfg *ChatGPTUnoConfig) *ChatGPTUnoBot {
-	// https://bypass.churchless.tech/api/
-	// https://chat.openai.com/backend-api
-	baseUrl := os.Getenv("CHATGPT_BASE_URL")
-	if baseUrl == "" {
-		// endpoint = "https://chat.openai.com/backend-api/"
-		baseUrl = "https://bypass.churchless.tech/api/"
-	}
 	chat := &ChatGPTUnoBot{
 		cfg:            cfg,
 		jar:            tls_client.NewCookieJar(),
-		baseUrl:        baseUrl,
 		conversationId: "",
 		parentId:       "",
 		convMapping:    NewMapping(),
 	}
 	return chat
+}
+
+func (chat *ChatGPTUnoBot) BaseURL() string {
+	// https://bypass.churchless.tech/api/
+	// https://chat.openai.com/backend-api
+	if chat.cfg.BaseUrl == "" {
+		chat.cfg.BaseUrl = os.Getenv("CHATGPT_BASE_URL")
+	}
+	if chat.cfg.BaseUrl == "" {
+		// endpoint = "https://chat.openai.com/backend-api/"
+		chat.cfg.BaseUrl = "https://bypass.churchless.tech/api/"
+	}
+	return chat.cfg.BaseUrl
 }
 
 func (chat *ChatGPTUnoBot) SetAccessToken(accessToken string) {
@@ -133,14 +137,14 @@ func (chat *ChatGPTUnoBot) Ask(prompt, conversationId, parentId, model string, t
 	model = chat.getModelName(model)
 
 	reqData := NewNextAction(prompt, conversationId, parentId, model)
-	u, _ := url.Parse(chat.baseUrl)
+	u, _ := url.Parse(chat.BaseURL())
 	chat.jar.SetCookies(u, []*http.Cookie{
 		{
 			Name:  "library",
 			Value: "revChatGPT",
 		},
 	})
-	endpoint := fmt.Sprintf("%sconversation", chat.baseUrl)
+	endpoint := fmt.Sprintf("%sconversation", chat.BaseURL())
 	client := NewRequests(chat.jar)
 	client.SetProxy(chat.cfg.Proxy)
 	client.SetBody(bytes.NewReader(reqData.Byte()))
@@ -222,7 +226,7 @@ func (chat *ChatGPTUnoBot) Ask(prompt, conversationId, parentId, model string, t
 	}
 */
 func (chat *ChatGPTUnoBot) getConversations(offset int, limit int) error {
-	endpoint := fmt.Sprintf("%sconversations?offset=%d&limit=%d", chat.baseUrl, offset, limit)
+	endpoint := fmt.Sprintf("%sconversations?offset=%d&limit=%d", chat.BaseURL(), offset, limit)
 	client := NewRequests(chat.jar)
 	client.SetProxy(chat.cfg.Proxy)
 	client.SetHeaders(chat.defaultHeaders(chat.cfg.AccessToken))
@@ -267,7 +271,7 @@ func (chat *ChatGPTUnoBot) getConversations(offset int, limit int) error {
 }
 
 func (chat *ChatGPTUnoBot) getMsgHistory(conversationId string) error {
-	endpoint := fmt.Sprintf("%sconversation/%s", chat.baseUrl, conversationId)
+	endpoint := fmt.Sprintf("%sconversation/%s", chat.BaseURL(), conversationId)
 	client := NewRequests(chat.jar)
 	client.SetProxy(chat.cfg.Proxy)
 	client.SetHeaders(chat.defaultHeaders(chat.cfg.AccessToken))
@@ -304,7 +308,7 @@ func (chat *ChatGPTUnoBot) genTitle(conversationId, messageId string) (title str
 	if err != nil {
 		return title, fmt.Errorf("gen title err:%s", err.Error())
 	}
-	endpoint := fmt.Sprintf("%sconversation/gen_title/%s", chat.baseUrl, conversationId)
+	endpoint := fmt.Sprintf("%sconversation/gen_title/%s", chat.BaseURL(), conversationId)
 	client := NewRequests(chat.jar)
 	client.SetProxy(chat.cfg.Proxy)
 	client.SetHeaders(chat.defaultHeaders(chat.cfg.AccessToken))
@@ -336,7 +340,7 @@ func (chat *ChatGPTUnoBot) changeTitle(conversationId, title string) error {
 	if err != nil {
 		return err
 	}
-	endpoint := fmt.Sprintf("%sconversation/%s", chat.baseUrl, conversationId)
+	endpoint := fmt.Sprintf("%sconversation/%s", chat.BaseURL(), conversationId)
 	client := NewRequests(chat.jar)
 	client.SetProxy(chat.cfg.Proxy)
 	client.SetHeaders(chat.defaultHeaders(chat.cfg.AccessToken))
@@ -360,7 +364,7 @@ func (chat *ChatGPTUnoBot) changeTitle(conversationId, title string) error {
 }
 
 func (chat *ChatGPTUnoBot) DeleteConversation(conversationId string) error {
-	endpoint := fmt.Sprintf("%sconversation/%s", chat.baseUrl, conversationId)
+	endpoint := fmt.Sprintf("%sconversation/%s", chat.BaseURL(), conversationId)
 	client := NewRequests(chat.jar)
 	client.SetProxy(chat.cfg.Proxy)
 	client.SetHeaders(chat.defaultHeaders(chat.cfg.AccessToken))
@@ -384,7 +388,7 @@ func (chat *ChatGPTUnoBot) DeleteConversation(conversationId string) error {
 }
 
 func (chat *ChatGPTUnoBot) ClearConversations() error {
-	endpoint := fmt.Sprintf("%sconversations", chat.baseUrl)
+	endpoint := fmt.Sprintf("%sconversations", chat.BaseURL())
 	client := NewRequests(chat.jar)
 	client.SetProxy(chat.cfg.Proxy)
 	client.SetHeaders(chat.defaultHeaders(chat.cfg.AccessToken))

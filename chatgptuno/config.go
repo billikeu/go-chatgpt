@@ -7,4 +7,5 @@ type ChatGPTUnoConfig struct {
 	SessionToken string
 	Proxy        string
 	Model        string // model: text-davinci-002-render-paid text-davinci-002-render-sha
+	BaseUrl      string
 }
