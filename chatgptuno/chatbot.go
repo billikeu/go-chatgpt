@@ -130,6 +130,11 @@ func (chat *ChatGPTUnoBot) Login() error {
 // The standard ChatGPT model: text-davinci-002-render-sha Turbo (Default for free users)
 func (chat *ChatGPTUnoBot) Ask(prompt, conversationId, parentId, model string, timeout int, callback func(chatRes *Response, err error)) error {
 	var err error
+	defer func() {
+		if callback != nil && err != nil {
+			callback(nil, err)
+		}
+	}()
 	conversationId, parentId, err = chat.askBeforeInit(conversationId, parentId)
 	if err != nil {
 		return err
