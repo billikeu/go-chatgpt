@@ -160,6 +160,10 @@ func (chat *ChatGPTUnoBot) Ask(prompt, conversationId, parentId, model string, t
 		return err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		err = fmt.Errorf("openai blocked your request %d", resp.StatusCode)
+		return err
+	}
 	reader := bufio.NewReader(resp.Body)
 	for {
 		b, _, err := reader.ReadLine()
