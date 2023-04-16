@@ -206,7 +206,7 @@ func (chat *ChatGPTUnoBot) Ask(prompt, conversationId, parentId, model string, t
 				convNode.SetCurrentNode(res.Message.ID)
 			}
 		}
-		if res.Message.Metadata.FinishDetails.Stop != "" {
+		if res.Message.EndTurn {
 			// change title: title == New chat or title == ""
 			go chat.autoChangConversationTitle(conversationId, res.Message.ID)
 			// log.Println("stop.............")
