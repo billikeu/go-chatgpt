@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"strings"
 
 	http "github.com/bogdanfinn/fhttp"
 	tls_client "github.com/bogdanfinn/tls-client"
@@ -128,8 +129,7 @@ func (chat *ChatGPTUnoBot) Login() error {
 }
 
 // The standard ChatGPT model: text-davinci-002-render-sha Turbo (Default for free users)
-func (chat *ChatGPTUnoBot) Ask(prompt, conversationId, parentId, model string, timeout int, callback func(chatRes *Response, err error)) error {
-	var err error
+func (chat *ChatGPTUnoBot) Ask(prompt, conversationId, parentId, model string, timeout int, callback func(chatRes *Response, err error)) (err error) {
 	defer func() {
 		if callback != nil && err != nil {
 			callback(nil, err)
@@ -173,16 +173,21 @@ func (chat *ChatGPTUnoBot) Ask(prompt, conversationId, parentId, model string, t
 			}
 			break
 		}
-		if len(b) < 6 {
+		body := string(b)
+		// log.Printf("[%s]", body)
+		if len(body) < 6 {
 			continue
 		}
 
-		// log.Printf("[%s]", string(b))
-		if string(b) == "data: [DONE]" {
+		if !strings.HasPrefix(body, "data: ") {
+			return fmt.Errorf(body)
+		}
+
+		if body == "data: [DONE]" {
 			// log.Println("done .....")
 			break
 		}
-		body := string(b)[6:]
+		body = body[6:]
 		res := NewResponse(body)
 		if res == nil {
 			return fmt.Errorf("err response:%s", body)
@@ -206,7 +211,7 @@ func (chat *ChatGPTUnoBot) Ask(prompt, conversationId, parentId, model string, t
 				convNode.SetCurrentNode(res.Message.ID)
 			}
 		}
-		if res.Message.EndTurn {
+		if res.Message.EndTurn && res.Message.Author.Role == "assistant" {
 			// change title: title == New chat or title == ""
 			go chat.autoChangConversationTitle(conversationId, res.Message.ID)
 			// log.Println("stop.............")
