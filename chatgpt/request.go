@@ -7,7 +7,8 @@ import (
 )
 
 type Request struct {
-	chatMsg []*ChatMsg
+	chatMsg    []*ChatMsg
+	sysChatMsg ChatMsg
 	sync.RWMutex
 }
 
@@ -24,7 +25,7 @@ func (req *Request) PutSystemMsg(content, name string) string {
 	defer req.Unlock()
 
 	msg := NewChatMsg(openai.ChatMessageRoleSystem, content, name)
-	req.chatMsg = append(req.chatMsg, msg)
+	req.sysChatMsg = *msg
 	return msg.id
 }
 
@@ -87,7 +88,7 @@ func (req *Request) GetMessage(options ...string) []openai.ChatCompletionMessage
 	if len(options) > 0 {
 		parentId = options[0]
 	}
-	messages := []openai.ChatCompletionMessage{}
+	messages := []openai.ChatCompletionMessage{*req.sysChatMsg.request}
 	var done bool
 	for _, v := range req.chatMsg {
 		messages = append(messages, *v.request)

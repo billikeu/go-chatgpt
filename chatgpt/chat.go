@@ -130,7 +130,7 @@ func (chat *ChatGPTConversion) Ask(ctx context.Context, prompt string, callback 
 	// log.Println("send message: ", msg)
 	req := openai.ChatCompletionRequest{
 		Model:     openai.GPT3Dot5Turbo,
-		MaxTokens: 4000,
+		MaxTokens: 1000,
 		Messages:  msg,
 		Stream:    true,
 	}
