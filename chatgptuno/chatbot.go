@@ -190,7 +190,8 @@ func (chat *ChatGPTUnoBot) Ask(prompt, conversationId, parentId, model string, t
 		body = body[6:]
 		res := NewResponse(body)
 		if res == nil {
-			return fmt.Errorf("err response:%s", body)
+			log.Printf("err response:%s", body)
+			continue
 		}
 		if callback != nil {
 			callback(res, nil)
