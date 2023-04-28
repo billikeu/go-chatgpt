@@ -69,14 +69,11 @@ func (chat *ChatGPTUnoBot) SetAccessToken(accessToken string) {
 
 func (chat *ChatGPTUnoBot) defaultHeaders(accessToken string, keepAlive ...bool) http.Header {
 	headers := http.Header{
-		"Host":                      {"chat.openai.com"},
-		"Origin":                    {"https://chat.openai.com/chat"},
 		"Accept":                    {"text/event-stream"},
 		"Authorization":             {fmt.Sprintf("Bearer %s", accessToken)},
 		"Content-Type":              {"application/json"},
 		"X-Openai-Assistant-App-Id": {""},
 		"Accept-Language":           {"en-US,en;q=0.9"},
-		"Referer":                   {"https://chat.openai.com/chat"},
 		"User-Agent":                {UA},
 	}
 	if len(keepAlive) > 0 && keepAlive[0] {
